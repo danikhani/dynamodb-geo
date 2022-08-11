@@ -6,3 +6,4 @@ from util import *
 from DynamoDBManager import DynamoDBManager
 from GeoDataManager import GeoDataManager
 from GeoDataManagerConfiguration import GeoDataManagerConfiguration
+from PointGeneretor import PointGeneretor

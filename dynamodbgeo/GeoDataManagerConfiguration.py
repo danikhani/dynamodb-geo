@@ -11,8 +11,7 @@ class GeoDataManagerConfiguration:
 
     geohashIndexName = "geohash-index"  # name of the LSI
 
-    def __init__(self, dynamoDBClient: 'dynamoDB client', tableName: str):
-        self.dynamoDBClient = dynamoDBClient  # dynamodb client taken from aws sdk
+    def __init__(self, tableName: str):
         self.tableName = tableName
         self.S2RegionCoverer = S2RegionCoverer  # this is form the s2 library
         self.hashKeyAttributeName = "hashKey"
