@@ -35,7 +35,7 @@ class PointGeneretor:
         return response
 
 
-    def dispatchQueries(self, covering: 'Covering', geoQueryInput: 'GeoQueryInput'):
+    def dispatchQueries(self, covering: 'Covering'):
         """
         Generating multiple query from the covering area and running query on the DynamoDB table
         """
@@ -43,31 +43,30 @@ class PointGeneretor:
         results = []
         for range in ranges:
             hashKey = S2Manager().generateHashKey(range.rangeMin, self.config.hashKeyLength)
-            results.extend(self.dynamoDBManager.queryGeohash(
-                geoQueryInput.QueryInput, hashKey, range))
+            results.extend(self.dynamoDBManager.queryGeohash(hashKey, range))
         return results
 
-    def queryRectangle(self, QueryRectangleInput: 'QueryRectangleRequest'):
+    def queryRectangle(self, geoPoint):
         latLngRect = S2Util().latLngRectFromQueryRectangleInput(
-            QueryRectangleInput)
+            geoPoint.getLatitude(), geoPoint.getLongitude())
 
         covering = Covering(
             self.config.S2RegionCoverer().get_covering(latLngRect))
-        results = self.dispatchQueries(covering, QueryRectangleInput)
-        return self.filterByRectangle(results, QueryRectangleInput)
+        results = self.dispatchQueries(covering)
+        return self.filterByRectangle(results)
 
-    def queryRadius(self, QueryRadiusInput: 'QueryRadiusRequest'):
+
+    def queryRadius(self, centerPoint, radiusInMeter, sort):
         latLngRect = S2Util().getBoundingLatLngRectFromQueryRadiusInput(
-            QueryRadiusInput)
+            centerPoint,radiusInMeter)
         covering = Covering(
             self.config.S2RegionCoverer().get_covering(latLngRect))
-        results = self.dispatchQueries(covering, QueryRadiusInput)
-        filtered_results = self.filterByRadius(results, QueryRadiusInput)
-        if QueryRadiusInput.sort == True:
+        results = self.dispatchQueries(covering)
+        filtered_results = self.filterByRadius(results, centerPoint,radiusInMeter)
+        if sort == True:
             # Tuples list (distance to the center point, the point data returned from dynamoDB)
             tuples = []
-            centerLatLng = S2LatLng.from_degrees(QueryRadiusInput.getCenterPoint(
-            ).getLatitude(), QueryRadiusInput.getCenterPoint().getLongitude())
+            centerLatLng = S2LatLng.from_degrees(centerPoint.getLatitude(), centerPoint.getLongitude())
             for item in filtered_results:
                 geoJson = item[self.config.geoJsonAttributeName]["S"]
                 coordinates = geoJson.split(",")
@@ -81,10 +80,8 @@ class PointGeneretor:
         else:
             return filtered_results
 
-    def filterByRadius(self, ItemList: 'points retrieved from dynamoDB', QueryRadiusInput: 'QueryRadiusRequest'):
-        centerLatLng = S2LatLng.from_degrees(QueryRadiusInput.getCenterPoint(
-        ).getLatitude(), QueryRadiusInput.getCenterPoint().getLongitude())
-        radiusInMeter = QueryRadiusInput.getRadiusInMeter()
+    def filterByRadius(self, ItemList: 'points retrieved from dynamoDB', centerPoint, radiusInMeter):
+        centerLatLng = S2LatLng.from_degrees(centerPoint.getLatitude(), centerPoint.getLongitude())
         result = []
         for item in ItemList:
             geoJson = item[self.config.geoJsonAttributeName]["S"]
@@ -96,9 +93,9 @@ class PointGeneretor:
                 result.append(item)
         return result
 
-    def filterByRectangle(self, ItemList: 'points retrieved from dynamoDB', QueryRectangleInput: 'QueryRectangleRequest'):
+    def filterByRectangle(self, ItemList: 'points retrieved from dynamoDB', minPoint,maxPoint):
         latLngRect = S2Util().latLngRectFromQueryRectangleInput(
-            QueryRectangleInput)
+            minPoint,maxPoint)
         result = []
         for item in ItemList:
             geoJson = item[self.config.geoJsonAttributeName]["S"]

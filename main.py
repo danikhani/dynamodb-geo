@@ -8,12 +8,22 @@ if __name__ == "__main__":
     geoDataManager = dynamodbgeo.PointGeneretor(config)
 
     print(" Testing the put ITem inside the rectengle ")
+    rangekey = str(uuid.uuid4())
     a = geoDataManager.generate_point(
         # latitude then latitude longitude
         dynamodbgeo.GeoPoint(36.879163, 10.243120),
         # Use this to ensure uniqueness of the hash/range pairs.
-        str(uuid.uuid4()),
+        rangekey
+        )
+    print(a)
+
+
+    print(geoDataManager.queryRadius(
+        dynamodbgeo.GeoPoint(36.874444, 10.241059),
+        95, sort=True)
         )
 
-
-    print(a)
+    # testing the query rectangle method
+    print(geoDataManager.queryRectangle(
+        dynamodbgeo.GeoPoint(36.878184, 10.242358))
+    )

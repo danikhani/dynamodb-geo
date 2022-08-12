@@ -4,10 +4,7 @@ EARTH_RADIUS_METERS = 6367000.0
 
 
 class S2Util:
-    def latLngRectFromQueryRectangleInput(self, QueryRectangleRequest: 'QueryRectangleRequest'):
-        queryRectangleRequest = QueryRectangleRequest
-        minPoint = queryRectangleRequest.getMinPoint()
-        maxPoint = queryRectangleRequest.getMaxPoint()
+    def latLngRectFromQueryRectangleInput(self, minPoint,maxPoint):
         latLngRect = None
         if minPoint is not None and maxPoint is not None:
             minLatLng = S2LatLng.from_degrees(
@@ -17,9 +14,7 @@ class S2Util:
             latLngRect = S2LatLngRect.from_point_pair(minLatLng, maxLatLng)
         return latLngRect
 
-    def getBoundingLatLngRectFromQueryRadiusInput(self, QueryRadiusRequest: 'QueryRadiusRequest'):
-        centerPoint = QueryRadiusRequest.getCenterPoint()
-        radiusInMeter = QueryRadiusRequest.getRadiusInMeter()
+    def getBoundingLatLngRectFromQueryRadiusInput(self, centerPoint,radiusInMeter):
         centerLatLng = S2LatLng.from_degrees(
             centerPoint.getLatitude(), centerPoint.getLongitude())
         latReferenceUnit = -1.0 if centerPoint.getLatitude() > 0.0 else 1.0

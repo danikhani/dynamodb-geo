@@ -12,26 +12,27 @@ class DynamoDBManager:
         self.config = config
 
     # for now we're not taking params passed into queryInput in consideration
-    def queryGeohash(self, queryInput, hashKey: int, range: int):
+    def queryGeohash(self, hashKey: int, range: int):
         """
         Given a hash key and a min to max GeoHashrange it query the GSI to select the appropriate items to return
         """
-        params=queryInput
+        params={}
 
         params['TableName']=self.config.tableName
         params['IndexName']=self.config.geohashIndexName
         
         # As eyConditionExpressions must only contain one condition per key, customer passing KeyConditionExpression will be replaced automatically
         params['KeyConditionExpression']=str(self.config.hashKeyAttributeName) + ' = :hashKey and ' + str(self.config.geohashAttributeName) +' between :geohashMin and :geohashMax'
-
-        if 'ExpressionAttributeValues' in queryInput.keys():
-            params['ExpressionAttributeValues'].update(  
-                {':hashKey': {'N': str(hashKey)}, ':geohashMax': {
-                    'N': str(range.rangeMax)}, ':geohashMin': {'N': str(range.rangeMin)}}
-            )
+        
+        expression_dic = {
+            ':hashKey': {'N': str(hashKey)}, 
+            ':geohashMax': { 'N': str(range.rangeMax)},
+            ':geohashMin': {'N': str(range.rangeMin)}
+        }
+        if 'ExpressionAttributeValues' in params.keys():
+            params['ExpressionAttributeValues'].update(expression_dic)
         else:
-            params['ExpressionAttributeValues']={':hashKey': {'N': str(hashKey)}, ':geohashMax': {
-                    'N': str(range.rangeMax)}, ':geohashMin': {'N': str(range.rangeMin)}}
+            params['ExpressionAttributeValues']= expression_dic
             
 
         response = self.config.dynamoDBClient.query(**params)
