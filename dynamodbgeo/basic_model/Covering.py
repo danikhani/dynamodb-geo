@@ -8,7 +8,8 @@ class Covering:
     def __init__(self, cellIds: 'S2CellId'):
         self.cellIds = cellIds
 
-    def getGeoHashRanges(self, hashKeyLength: int) -> 'GeohashRange[]':
+    # returns geohashranges list
+    def getGeoHashRanges(self, hashKeyLength: int) -> list:
         ranges = []
         for outerRange in self.cellIds:
             hashRange = GeohashRange(
