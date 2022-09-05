@@ -1,5 +1,5 @@
 from dynamodbgeo import GeoDataManagerConfiguration
-from dynamodbgeo.s2 import S2Manager
+from dynamodbgeo.basic_s2 import S2Manager
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -31,7 +31,9 @@ class GeohashRange:
             return True
         return False
 
-    def trySplit(self, hashKeyLength: int) -> 'GeohashRange[]':
+    # this returns list of heohashrange list
+    # 'GeohashRange[]'
+    def trySplit(self, hashKeyLength: int) -> list:
         result = []
         minHashKey = S2Manager().generateHashKey(self.rangeMin, hashKeyLength)
         maxHashKey = S2Manager().generateHashKey(self.rangeMax, hashKeyLength)

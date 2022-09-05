@@ -1,12 +1,11 @@
 from s2sphere import LatLng as S2LatLng
 from s2sphere import LatLngRect as S2LatLngRect
-EARTH_RADIUS_METERS = 6367000.0
-
-
-
 
 
 class S2Util:
+    def __init__(self,config):
+        self.config = config
+
     def latLngRectFromQueryRectangleInput(self, minLatitude, minLongitude, maxLatitude, maxLongitude):
         latLngRect = None
         if minLatitude is not None and minLongitude is not None and maxLatitude is not None and maxLongitude is not None:
@@ -26,9 +25,9 @@ class S2Util:
         lngReferenceLatLng = S2LatLng.from_degrees(centerPointLatitude, centerPointLongitude
                                                    + lngReferenceUnit)
         latForRadius = radiusInMeter / \
-            (centerLatLng.get_distance(latReferenceLatLng).radians * EARTH_RADIUS_METERS)
+            (centerLatLng.get_distance(latReferenceLatLng).radians * self.config.EARTH_RADIUS_METERS)
         lngForRadius = radiusInMeter / \
-            (centerLatLng.get_distance(lngReferenceLatLng).radians * EARTH_RADIUS_METERS)
+            (centerLatLng.get_distance(lngReferenceLatLng).radians * self.config.EARTH_RADIUS_METERS)
         minLatLng = S2LatLng.from_degrees(centerPointLatitude - latForRadius,
                                           centerPointLongitude - lngForRadius)
         maxLatLng = S2LatLng.from_degrees(centerPointLatitude + latForRadius,

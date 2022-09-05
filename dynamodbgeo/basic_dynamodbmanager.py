@@ -2,14 +2,15 @@
 Purpose: This class contains all the operation to perform on the DynamoDB table
 
 """
-from s2 import S2Manager
+from basic_s2 import S2Manager
 from boto3.dynamodb.conditions import Key, Attr
 
 
 class DynamoDBManager:
 
-    def __init__(self, config):
+    def __init__(self, config, dynamodb_client):
         self.config = config
+        self.dynamodb_client = dynamodb_client 
 
     # for now we're not taking params passed into queryInput in consideration
     def queryGeohash(self, hashKey: int, range: int):
@@ -35,33 +36,36 @@ class DynamoDBManager:
             params['ExpressionAttributeValues']= expression_dic
             
 
-        response = self.config.dynamoDBClient.query(**params)
+        response = self.dynamodb_client.query(**params)
         data = response['Items']
 
         while 'LastEvaluatedKey' in response: 
             params['ExclusiveStartKey']=response['LastEvaluatedKey']
-            response = self.config.dynamoDBClient.query(**params)
+            response = self.dynamodb_client.query(**params)
             data.extend(response['Items'])
         return data
 
-    def put_Point(self, putPointInput: 'PutPointInput'):
+
+    def put_Point(self, Latitude, Longitude, sort_key, extra_params_dic):
         """
         The dict in Item put_item call, should contains a dict with string as a key and a string as a value: {"N": "123"}
         """
-        geohash = S2Manager().generateGeohash(putPointInput.GeoPoint)
-        hashKey = S2Manager().generateHashKey(geohash, self.config.hashKeyLength)
+
+        s2_manager = S2Manager()
+        geohash = s2_manager.generateGeohash(Latitude, Longitude)
+        hashKey = s2_manager.generateHashKey(geohash, self.config.hashKeyLength)
         response = ""
-        params=putPointInput.ExtraFields.copy()   
+        params = extra_params_dic.copy()   
 
         params['TableName']=self.config.tableName
         
-        if('Item' not in putPointInput.ExtraFields.keys()):
+        if('Item' not in extra_params_dic.keys()):
             params['Item']={}
 
         params['Item'][self.config.hashKeyAttributeName] ={"N": str(hashKey)}
-        params['Item'][self.config.rangeKeyAttributeName] ={"S": putPointInput.RangeKeyValue}
+        params['Item'][self.config.rangeKeyAttributeName] ={"S": sort_key}
         params['Item'][self.config.geohashAttributeName] ={'N': str(geohash)}
-        params['Item'][self.config.geoJsonAttributeName] ={"S": "{},{}".format(putPointInput.GeoPoint.latitude,putPointInput.GeoPoint.longitude)}
+        params['Item'][self.config.geoJsonAttributeName] ={"S": "{},{}".format(Latitude, Longitude)}
         
         try:
             response = self.config.dynamoDBClient.put_item(**params)
@@ -70,11 +74,11 @@ class DynamoDBManager:
             response = "Error"
         return response
 
-    def get_Point(self, getPointInput: 'GetPointInput'):
+    def get_Point(self, Latitude, Longitude, sort_key):
         """
         The dict in Key get_item call, should contains a dict with string as a key and a string as a value: {"N": "123"}
         """
-        geohash = S2Manager().generateGeohash(getPointInput.GeoPoint)
+        geohash = S2Manager().generateGeohash(Latitude, Longitude)
         hashKey = S2Manager().generateHashKey(geohash, self.config.hashKeyLength)
         response = ""
         try:
@@ -83,7 +87,7 @@ class DynamoDBManager:
                 Key={
                     self.config.hashKeyAttributeName: {"N": str(hashKey)},
                     self.config.rangeKeyAttributeName: {
-                        "S": getPointInput.RangeKeyValue}
+                        "S": sort_key}
                 }
             )
         except Exception as e:
@@ -91,22 +95,22 @@ class DynamoDBManager:
             response = "Error"
         return response
     
-    def update_Point(self,UpdateItemInput : 'UpdateItemInput'):
+    def update_Point(self, Latitude, Longitude, sort_key, extra_params_dic):
         """
         The dict in Item Update call, should contains a dict with string as a key and a string as a value: {"N": "123"}
         """
-        geohash = S2Manager().generateGeohash(UpdateItemInput.GeoPoint)
+        geohash = S2Manager().generateGeohash(Latitude, Longitude)
         hashKey = S2Manager().generateHashKey(geohash, self.config.hashKeyLength)
         response = ""
-        params=UpdateItemInput.ExtraFields.copy()   
+        params=extra_params_dic.copy()   
 
         params['TableName']=self.config.tableName
         
-        if('Key' not in UpdateItemInput.ExtraFields.keys()):
+        if('Key' not in extra_params_dic.keys()):
             params['Key']={}
 
         params['Key'][self.config.hashKeyAttributeName] ={"N": str(hashKey)}
-        params['Key'][self.config.rangeKeyAttributeName] ={"S": UpdateItemInput.RangeKeyValue}
+        params['Key'][self.config.rangeKeyAttributeName] ={"S": sort_key}
         
         #TODO Geohash and geoJson cannot be updated. For now no control over that need to be added        
         try:
@@ -116,22 +120,22 @@ class DynamoDBManager:
             response = "Error"
         return response
 
-    def delete_Point(self,DeleteItemInput : 'DeleteItemInput'):
+    def delete_Point(self, Latitude, Longitude, sort_key, extra_params_dic):
         """
         The dict in Item Update call, should contains a dict with string as a key and a string as a value: {"N": "123"}
         """
-        geohash = S2Manager().generateGeohash(DeleteItemInput.GeoPoint)
+        geohash = S2Manager().generateGeohash(Latitude, Longitude)
         hashKey = S2Manager().generateHashKey(geohash, self.config.hashKeyLength)
         response = ""
-        params=DeleteItemInput.ExtraFields.copy()   
+        params=extra_params_dic.copy()   
 
         params['TableName']=self.config.tableName
         
-        if('Key' not in DeleteItemInput.ExtraFields.keys()):
+        if('Key' not in extra_params_dic.keys()):
             params['Key']={}
 
         params['Key'][self.config.hashKeyAttributeName] ={"N": str(hashKey)}
-        params['Key'][self.config.rangeKeyAttributeName] ={"S": DeleteItemInput.RangeKeyValue}
+        params['Key'][self.config.rangeKeyAttributeName] ={"S": sort_key}
         try:
             response = self.config.dynamoDBClient.delete_item(**params)
         except Exception as e:
