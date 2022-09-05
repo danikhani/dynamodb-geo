@@ -15,8 +15,9 @@ Author: Hamza Rhibi
 
 class GeoTableUtil:
 
-    def __init__(self,config):
+    def __init__(self,config,dynamoDBClient):
         self.config=config
+        self.dynamoDBClient = dynamoDBClient
     
     def getCreateTableRequest(self):
         """
@@ -25,26 +26,28 @@ class GeoTableUtil:
         params = {
             'TableName' : self.config.tableName,
             'KeySchema': [       
-                { 'AttributeName': self.config.hashKeyAttributeName, 'KeyType': "HASH"},    # Partition key
-                { 'AttributeName': self.config.rangeKeyAttributeName, 'KeyType': "RANGE" }   # Sort key
+                { 'AttributeName': self.config.partition_key_attribute, 'KeyType': "HASH"},    # Partition key
+                { 'AttributeName': self.config.sort_key_attribute, 'KeyType': "RANGE" }   # Sort key
             ],
             'AttributeDefinitions':[
-                { 'AttributeName': self.config.hashKeyAttributeName, 'AttributeType': 'N' },
-                { 'AttributeName': self.config.rangeKeyAttributeName, 'AttributeType': 'S' },
-                { 'AttributeName': self.config.geohashAttributeName, 'AttributeType': 'N' }
+                { 'AttributeName': self.config.partition_key_attribute, 'AttributeType': 'N' },
+                { 'AttributeName': self.config.sort_key_attribute, 'AttributeType': 'S' },
+                #{ 'AttributeName': self.config.geohash, 'AttributeType': 'N' },
+                { 'AttributeName': self.config.gamename, 'AttributeType': 'S' }
+                
 
             ],
             'LocalSecondaryIndexes':[
                 {
-                'IndexName': self.config.geohashIndexName,
+                'IndexName': self.config.lsi_game_name,
                 'KeySchema': [
                     {
                     'KeyType': 'HASH',
-                    'AttributeName': self.config.hashKeyAttributeName
+                    'AttributeName': self.config.partition_key_attribute
                     },
                     {
                     'KeyType': 'RANGE',
-                    'AttributeName': self.config.geohashAttributeName
+                    'AttributeName': self.config.gamename
                     }
                 ],
                 'Projection': {
@@ -63,7 +66,7 @@ class GeoTableUtil:
     def create_table(self,CreateTableInput :"Dict with parameters to create the table"):
         # skip if table already exists
         try:
-            response = self.config.dynamoDBClient.describe_table(TableName=self.config.tableName)
+            response = self.dynamoDBClient.describe_table(TableName=self.config.tableName)
             # table exists...bail
             print ("Table [{}] already exists. Skipping table creation.".format(self.config.tableName))
             return
@@ -71,10 +74,10 @@ class GeoTableUtil:
             pass # no table... good
         print ("Creating table [{}]".format(self.config.tableName))
 
-        table = self.config.dynamoDBClient.create_table(**CreateTableInput)
+        table = self.dynamoDBClient.create_table(**CreateTableInput)
 
         print ("Waiting for table [{}] to be created".format(self.config.tableName))
-        self.config.dynamoDBClient.get_waiter('table_exists').wait(TableName=self.config.tableName)
+        self.dynamoDBClient.get_waiter('table_exists').wait(TableName=self.config.tableName)
         # if no exception, continue
         print ("Table created")
         return

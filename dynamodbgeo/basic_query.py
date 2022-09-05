@@ -11,15 +11,16 @@ from s2sphere import LatLngRect as S2LatLngRect
 
 
 class QueryGenerator:
-    def __init__(self, config:GeoDataManagerConfiguration):
+    def __init__(self, config:GeoDataManagerConfiguration, dynamoDBManager):
         self.config = config
-        self.dynamoDBManager = DynamoDBManager(config)
+        self.dynamoDBManager = dynamoDBManager
 
     def dispatchQueries(self, covering: 'Covering'):
         """
         Generating multiple query from the covering area and running query on the DynamoDB table
         """
-        ranges = covering.getGeoHashRanges()
+        
+        ranges = covering.getGeoHashRanges(self.config.hashKeyLength)
         results = []
         for range in ranges:
             hashKey = S2Manager().generateHashKey(range.rangeMin, self.config.hashKeyLength)
@@ -32,13 +33,13 @@ class QueryGenerator:
     # Rectangle
     ######
 
-    def filterByRectangle(self, ItemList:'points retrieved from dynamoDB' , minLatitude, minLongitude, maxLatitude, maxLongitude):
+    def filterByRectangle(self, ItemList:'points retrieved from dynamoDB', minLatitude, minLongitude, maxLatitude, maxLongitude):
             s2_util = S2Util(self.config)
             latLngRect = s2_util.latLngRectFromQueryRectangleInput(
                 minLatitude, minLongitude, maxLatitude, maxLongitude)
             result = []
             for item in ItemList:
-                geoJson = item[self.config.geoJsonAttributeName]["S"]
+                geoJson = item[self.config.geo_json_attribute]["S"]
                 coordinates = geoJson.split(",")
                 latitude = float(coordinates[0])
                 longitude = float(coordinates[1])
@@ -72,13 +73,13 @@ class QueryGenerator:
         covering = Covering(coverings)
         
         results = self.dispatchQueries(covering)
-        filtered_results = self.filterByRadius(results)
+        filtered_results = self.filterByRadius(results,centerPointLatitude, centerPointLongitude, radiusInMeter)
         if sort == True:
             # Tuples list (distance to the center point, the point data returned from dynamoDB)
             tuples = []
             centerLatLng = S2LatLng.from_degrees(centerPointLatitude, centerPointLongitude)
             for item in filtered_results:
-                geoJson = item[self.config.geoJsonAttributeName]["S"]
+                geoJson = item[self.config.geo_json_attribute]["S"]
                 coordinates = geoJson.split(",")
                 latitude = float(coordinates[0])
                 longitude = float(coordinates[1])
@@ -95,7 +96,7 @@ class QueryGenerator:
         centerLatLng = S2LatLng.from_degrees(centerPointLatitude, centerPointLongitude)
         result = []
         for item in ItemList:
-            geoJson = item[self.config.geoJsonAttributeName]["S"]
+            geoJson = item[self.config.geo_json_attribute]["S"]
             coordinates = geoJson.split(",")
             latitude = float(coordinates[0])
             longitude = float(coordinates[1])

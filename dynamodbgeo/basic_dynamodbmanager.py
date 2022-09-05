@@ -20,10 +20,10 @@ class DynamoDBManager:
         params={}
 
         params['TableName']=self.config.tableName
-        params['IndexName']=self.config.geohashIndexName
+        params['IndexName']=self.config.lsi_game_name
         
         # As eyConditionExpressions must only contain one condition per key, customer passing KeyConditionExpression will be replaced automatically
-        params['KeyConditionExpression']=str(self.config.hashKeyAttributeName) + ' = :hashKey and ' + str(self.config.geohashAttributeName) +' between :geohashMin and :geohashMax'
+        params['KeyConditionExpression']=str(self.config.partition_key_attribute) + ' = :hashKey and ' + str(self.config.geohash) +' between :geohashMin and :geohashMax'
         
         expression_dic = {
             ':hashKey': {'N': str(hashKey)}, 
@@ -46,7 +46,7 @@ class DynamoDBManager:
         return data
 
 
-    def put_Point(self, Latitude, Longitude, sort_key, extra_params_dic):
+    def put_Point(self, Latitude, Longitude, sort_key, extra_params_dic = {}):
         """
         The dict in Item put_item call, should contains a dict with string as a key and a string as a value: {"N": "123"}
         """
@@ -62,13 +62,13 @@ class DynamoDBManager:
         if('Item' not in extra_params_dic.keys()):
             params['Item']={}
 
-        params['Item'][self.config.hashKeyAttributeName] ={"N": str(hashKey)}
-        params['Item'][self.config.rangeKeyAttributeName] ={"S": sort_key}
-        params['Item'][self.config.geohashAttributeName] ={'N': str(geohash)}
-        params['Item'][self.config.geoJsonAttributeName] ={"S": "{},{}".format(Latitude, Longitude)}
+        params['Item'][self.config.partition_key_attribute] ={"N": str(hashKey)}
+        params['Item'][self.config.sort_key_attribute] ={"S": sort_key}
+        params['Item'][self.config.geohash] ={'N': str(geohash)}
+        params['Item'][self.config.geo_json_attribute] ={"S": "{},{}".format(Latitude, Longitude)}
         
         try:
-            response = self.config.dynamoDBClient.put_item(**params)
+            response = self.dynamodb_client.put_item(**params)
         except Exception as e:
             print("The following error occured during the item insertion :{}".format(e))
             response = "Error"
@@ -82,11 +82,11 @@ class DynamoDBManager:
         hashKey = S2Manager().generateHashKey(geohash, self.config.hashKeyLength)
         response = ""
         try:
-            response = self.config.dynamoDBClient.get_item(
+            response = self.dynamodb_client.get_item(
                 TableName=self.config.tableName,
                 Key={
-                    self.config.hashKeyAttributeName: {"N": str(hashKey)},
-                    self.config.rangeKeyAttributeName: {
+                    self.config.partition_key_attribute: {"N": str(hashKey)},
+                    self.config.sort_key_attribute: {
                         "S": sort_key}
                 }
             )
@@ -109,12 +109,12 @@ class DynamoDBManager:
         if('Key' not in extra_params_dic.keys()):
             params['Key']={}
 
-        params['Key'][self.config.hashKeyAttributeName] ={"N": str(hashKey)}
-        params['Key'][self.config.rangeKeyAttributeName] ={"S": sort_key}
+        params['Key'][self.config.partition_key_attribute] ={"N": str(hashKey)}
+        params['Key'][self.config.sort_key_attribute] ={"S": sort_key}
         
         #TODO Geohash and geoJson cannot be updated. For now no control over that need to be added        
         try:
-            response = self.config.dynamoDBClient.update_item(**params)
+            response = self.dynamodb_client.update_item(**params)
         except Exception as e:
             print("The following error occured during the item update :{}".format(e))
             response = "Error"
@@ -134,10 +134,10 @@ class DynamoDBManager:
         if('Key' not in extra_params_dic.keys()):
             params['Key']={}
 
-        params['Key'][self.config.hashKeyAttributeName] ={"N": str(hashKey)}
-        params['Key'][self.config.rangeKeyAttributeName] ={"S": sort_key}
+        params['Key'][self.config.partition_key_attribute] ={"N": str(hashKey)}
+        params['Key'][self.config.sort_key_attribute] ={"S": sort_key}
         try:
-            response = self.config.dynamoDBClient.delete_item(**params)
+            response = self.dynamodb_client.delete_item(**params)
         except Exception as e:
             print("The following error occured during the item delete :{}".format(e))
             response = "Error"

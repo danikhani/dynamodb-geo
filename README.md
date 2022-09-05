@@ -1,4 +1,4 @@
-# Geo Library for Amazon DynamoDB
+# Geo Library for Amazon DynamoDB (Easier Version)
 
 This project is an unofficial port of [awslabs/dynamodb-geo][dynamodb-geo], bringing creation and querying of geospatial data to Python developers using [Amazon DynamoDB][dynamodb].
 
@@ -209,11 +209,11 @@ TODO:
 
 These are public properties of a `GeoDataManagerConfiguration` instance. After creating the config object you may modify these properties.
 
-#### geohashAttributeName: string = "geohash"
+#### geohash: string = "geohash"
 
 The name of the attribute storing the full 64-bit geohash. Its value is auto-generated based on item coordinates.
 
-#### hashKeyAttributeName: string = "hashKey"
+#### partition_key_attribute: string = "hashKey"
 
 The name of the attribute storing the first `hashKeyLength` digits (default 2) of the geo hash, used as the hash (aka partition) part of a [hash/range primary key pair][hashrange]. Its value is auto-generated based on item coordinates.
 
@@ -221,15 +221,15 @@ The name of the attribute storing the first `hashKeyLength` digits (default 2) o
 
 See [above][choosing-hashkeylength].
 
-#### rangeKeyAttributeName: string = "rangeKey"
+#### sort_key_attribute: string = "rangeKey"
 
 The name of the attribute storing the range key, used as the range (aka sort) part of a [hash/range key primary key pair][hashrange]. Its value must be specified by you (hash-range pairs must be unique).
 
-#### geoJsonAttributeName: string = "geoJson"
+#### geo_json_attribute: string = "geoJson"
 
 The name of the attribute which will contain the longitude/latitude pair in a GeoJSON-style point (see also `longitudeFirst`).
 
-#### geohashIndexName: string = "geohash-index"
+#### lsi_game_name: string = "geohash-index"
 
 The name of the index to be created against the geohash. Only used for creating new tables.
 

@@ -1,4 +1,4 @@
-from dynamodbgeo import GeoDataManagerConfiguration
+from basic_config import GeoDataManagerConfiguration
 from dynamodbgeo.basic_s2 import S2Manager
 import os
 import sys

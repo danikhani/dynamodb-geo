@@ -3,9 +3,8 @@ from s2sphere import Cell as S2Cell
 
 
 class S2Manager:
-    def generateGeohash(self, geoPoint):
-        latLng = S2LatLng.from_degrees(
-            geoPoint.getLatitude(), geoPoint.getLongitude())
+    def generateGeohash(self, Latitude, Longitude):
+        latLng = S2LatLng.from_degrees(Latitude, Longitude)
         cell = S2Cell.from_lat_lng(latLng)
         cellId = cell.id()
         return cellId.id()
