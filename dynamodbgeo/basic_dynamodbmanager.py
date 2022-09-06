@@ -18,27 +18,40 @@ class DynamoDBManager:
         Given a hash key and a min to max GeoHashrange it query the GSI to select the appropriate items to return
         """
         params={}
-
-        params['TableName']=self.config.tableName
-        params['IndexName']=self.config.lsi_game_name
         
+        params['TableName']=self.config.tableName
+        params['IndexName']=self.config.lsi_geohash_name
+
+        # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html
+
+        # using hash sort key to find items via condition expression
         # As eyConditionExpressions must only contain one condition per key, customer passing KeyConditionExpression will be replaced automatically
         params['KeyConditionExpression']=str(self.config.partition_key_attribute) + ' = :hashKey and ' + str(self.config.geohash) +' between :geohashMin and :geohashMax'
+
+        # filter expression wont improve read capacitiy and applies after queuery is completed
+        params['FilterExpression']='gameName = :gamename'
+        
+        #FilterExpression: 'dbId = :dbId and updateOn > :updateOn and deviceId != :deviceId',
+
         
         expression_dic = {
             ':hashKey': {'N': str(hashKey)}, 
             ':geohashMax': { 'N': str(range.rangeMax)},
-            ':geohashMin': {'N': str(range.rangeMin)}
+            ':geohashMin': {'N': str(range.rangeMin)},
+            ':gamename': {'S': "asd"},
         }
         if 'ExpressionAttributeValues' in params.keys():
             params['ExpressionAttributeValues'].update(expression_dic)
         else:
             params['ExpressionAttributeValues']= expression_dic
             
+        
+        # adding more filters via filter expression
 
         response = self.dynamodb_client.query(**params)
         data = response['Items']
 
+        # paginate if there are more for one request.
         while 'LastEvaluatedKey' in response: 
             params['ExclusiveStartKey']=response['LastEvaluatedKey']
             response = self.dynamodb_client.query(**params)

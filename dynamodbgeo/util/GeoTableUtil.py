@@ -32,12 +32,28 @@ class GeoTableUtil:
             'AttributeDefinitions':[
                 { 'AttributeName': self.config.partition_key_attribute, 'AttributeType': 'N' },
                 { 'AttributeName': self.config.sort_key_attribute, 'AttributeType': 'S' },
-                #{ 'AttributeName': self.config.geohash, 'AttributeType': 'N' },
+                { 'AttributeName': self.config.geohash, 'AttributeType': 'N' },
                 { 'AttributeName': self.config.gamename, 'AttributeType': 'S' }
                 
 
             ],
             'LocalSecondaryIndexes':[
+                {
+                'IndexName': self.config.lsi_geohash_name,
+                'KeySchema': [
+                    {
+                    'KeyType': 'HASH',
+                    'AttributeName': self.config.partition_key_attribute
+                    },
+                    {
+                    'KeyType': 'RANGE',
+                    'AttributeName': self.config.geohash
+                    }
+                ],
+                'Projection': {
+                    'ProjectionType': 'ALL'
+                }
+                }, 
                 {
                 'IndexName': self.config.lsi_game_name,
                 'KeySchema': [

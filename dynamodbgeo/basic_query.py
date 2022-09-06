@@ -11,7 +11,7 @@ from s2sphere import LatLngRect as S2LatLngRect
 
 
 class QueryGenerator:
-    def __init__(self, config:GeoDataManagerConfiguration, dynamoDBManager):
+    def __init__(self, config:GeoDataManagerConfiguration, dynamoDBManager:DynamoDBManager):
         self.config = config
         self.dynamoDBManager = dynamoDBManager
 
@@ -34,19 +34,19 @@ class QueryGenerator:
     ######
 
     def filterByRectangle(self, ItemList:'points retrieved from dynamoDB', minLatitude, minLongitude, maxLatitude, maxLongitude):
-            s2_util = S2Util(self.config)
-            latLngRect = s2_util.latLngRectFromQueryRectangleInput(
-                minLatitude, minLongitude, maxLatitude, maxLongitude)
-            result = []
-            for item in ItemList:
-                geoJson = item[self.config.geo_json_attribute]["S"]
-                coordinates = geoJson.split(",")
-                latitude = float(coordinates[0])
-                longitude = float(coordinates[1])
-                latLng = S2LatLng.from_degrees(latitude, longitude)
-                if(latLngRect.contains(latLng)):
-                    result.append(item)
-            return result
+        s2_util = S2Util(self.config)
+        latLngRect = s2_util.latLngRectFromQueryRectangleInput(
+            minLatitude, minLongitude, maxLatitude, maxLongitude)
+        result = []
+        for item in ItemList:
+            geoJson = item[self.config.geo_json_attribute]["S"]
+            coordinates = geoJson.split(",")
+            latitude = float(coordinates[0])
+            longitude = float(coordinates[1])
+            latLng = S2LatLng.from_degrees(latitude, longitude)
+            if(latLngRect.contains(latLng)):
+                result.append(item)
+        return result
 
 
     def queryRectangle(self, minLatitude, minLongitude, maxLatitude, maxLongitude):

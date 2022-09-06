@@ -21,7 +21,7 @@ def put_point_in_db():
 
     other_info_dic = {
         'Item': {
-            'gameName': {'S': "asd"},
+            'gameName': {'S': "kl"},
         },
         # ... Anything else to pass through to `putItem`, eg ConditionExpression
         'ConditionExpression': "attribute_not_exists(hashKey)"
@@ -59,8 +59,8 @@ if __name__ == "__main__":
     config = dynamodbgeo.GeoDataManagerConfiguration('test_8')
     #create_table()
 
-    res = put_point_in_db()
-    print(res)
+    #res = put_point_in_db()
+    #print(res)
 
     res = query_rectangle()
     print(res)

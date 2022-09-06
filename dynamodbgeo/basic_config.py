@@ -12,10 +12,11 @@ class GeoDataManagerConfiguration:
         # table setting
         self.partition_key_attribute = "partitionkey"
         self.sort_key_attribute = "sortkey"
-        self.geohash = "geoHash"
         self.geo_json_attribute = "geoJson" # json location in a row.
 
-        
+        self.lsi_geohash_name = "geohash"
+        self.geohash = "geoHash"
+
         self.lsi_game_name = "lsi_game_name"  # name of the LSI
         self.gamename = "gameName"
         
