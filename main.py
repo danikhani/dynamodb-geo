@@ -9,11 +9,12 @@ def put_point_in_db():
     geoDataManager = dynamodbgeo.DynamoDBManager(config, dynamodb_client)
 
     # define a dict of the item to input
-    other_info_dic = {
+    other_info_dic2 = {
         'Item': {
             'Country': {'S': "Italy"},
             'Capital': {'S': "Tunis"},
-            'year': {'S': '2020'}
+            'year': {'S': '2020'},
+            'lol':{'S':'really lol'}
         },
         # ... Anything else to pass through to `putItem`, eg ConditionExpression
         'ConditionExpression': "attribute_not_exists(hashKey)"
@@ -27,7 +28,7 @@ def put_point_in_db():
         'ConditionExpression': "attribute_not_exists(hashKey)"
     }
 
-    res = geoDataManager.put_Point(36.879163, 10.243123, sort_key,other_info_dic)
+    res = geoDataManager.put_Point(36.879163, 10.243124, sort_key,other_info_dic2)
     print(res)
 
 
@@ -62,7 +63,6 @@ if __name__ == "__main__":
     #res = put_point_in_db()
     #print(res)
 
-    res = query_rectangle()
-    print(res)
+    res2 = query_circle()
     
 

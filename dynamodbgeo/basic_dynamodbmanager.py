@@ -29,7 +29,8 @@ class DynamoDBManager:
         params['KeyConditionExpression']=str(self.config.partition_key_attribute) + ' = :hashKey and ' + str(self.config.geohash) +' between :geohashMin and :geohashMax'
 
         # filter expression wont improve read capacitiy and applies after queuery is completed
-        params['FilterExpression']='gameName = :gamename'
+        # TODO: Its for further filteration of resaults.
+        #params['FilterExpression']='gameName = :gamename'
         
         #FilterExpression: 'dbId = :dbId and updateOn > :updateOn and deviceId != :deviceId',
 
@@ -37,8 +38,9 @@ class DynamoDBManager:
         expression_dic = {
             ':hashKey': {'N': str(hashKey)}, 
             ':geohashMax': { 'N': str(range.rangeMax)},
-            ':geohashMin': {'N': str(range.rangeMin)},
-            ':gamename': {'S': "asd"},
+            ':geohashMin': {'N': str(range.rangeMin)}
+            # TODO: Its for further filteration of resaults.
+            #':gamename': {'S': "kl"},
         }
         if 'ExpressionAttributeValues' in params.keys():
             params['ExpressionAttributeValues'].update(expression_dic)
