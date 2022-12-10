@@ -25,6 +25,7 @@ class QueryGenerator:
         for range in ranges:
             hashKey = S2Manager().generateHashKey(range.rangeMin, self.config.hashKeyLength)
             queried_geohash = self.dynamoDBManager.queryGeohash(hashKey, range)
+           #queried_geohash2 = self.dynamoDBManager.queryGeohash_boto3(hashKey, "kl")
             results.extend(queried_geohash)
         return results
 
